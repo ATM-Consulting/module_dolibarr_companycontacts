@@ -104,7 +104,7 @@ class Companycontacts extends CommonObject
 		$sql.= " ".(! isset($this->fk_contact)?'NULL':"'".$this->fk_contact."'").",";
 		$sql.= " ".(! isset($this->function_code)?'NULL':"'".$this->db->escape($this->function_code)."'").",";
 		$sql.= " ".(! isset($this->department_code)?'NULL':"'".$this->db->escape($this->department_code)."'").",";
-		$sql.= " ".(! isset($this->datec) || dol_strlen($this->datec)==0?'NULL':$this->db->idate($this->datec)).",";
+		$sql.= " ".(! isset($this->datec) || dol_strlen($this->datec)==0?'NULL':"'".$this->db->idate($this->datec))."'".",";
 		$sql.= " ".(! isset($this->fk_user_creat)?"'".$user->id."'":"'".$this->fk_user_creat."'").",";
 		$sql.= " ".(! isset($this->options)?'NULL':"'".$this->db->escape($this->options)."'")."";
 
