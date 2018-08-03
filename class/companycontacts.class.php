@@ -17,14 +17,14 @@
  */
 
 /**
- *  \file       companycontacts/companycontacts.class.php
- *  \ingroup    companycontacts
- *  \brief      This file is an example for a CRUD class file (Create/Read/Update/Delete)
- *				Initialy built by build_class_from_table on 2014-01-09 05:19
+ * \file companycontacts/companycontacts.class.php
+ * \ingroup companycontacts
+ * \brief This file is an example for a CRUD class file (Create/Read/Update/Delete)
+ * Initialy built by build_class_from_table on 2014-01-09 05:19
  */
 
 // Put here all includes required by your class file
-require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
+require_once (DOL_DOCUMENT_ROOT . "/core/class/commonobject.class.php");
 
 
 /**
@@ -32,24 +32,24 @@ require_once(DOL_DOCUMENT_ROOT."/core/class/commonobject.class.php");
  */
 class Companycontacts extends CommonObject
 {
-	var $db;							//!< To store db handler
-	var $error;							//!< To return error code (or message)
-	var $errors=array();				//!< To return several error codes (or messages)
-	var $element='companycontacts';			//!< Id that identify managed objects
-	var $table_element='companycontacts';		//!< Name of table without prefix where object is stored
+	public $db;							//!< To store db handler
+	public $error;							//!< To return error code (or message)
+	public $errors=array();				//!< To return several error codes (or messages)
+	public $element='companycontacts';			//!< Id that identify managed objects
+	public $table_element='companycontacts';		//!< Name of table without prefix where object is stored
 
-    var $id;
+	public $id;
 
-	var $tms='';
-	var $fk_soc;
-	var $fk_contact;
-	var $function_code;
-	var $department_code;
-	var $datec='';
-	var $fk_user_creat;
-	var $options;
+    public $tms='';
+	public $fk_soc;
+	public $fk_contact;
+	public $function_code;
+	public $department_code;
+	public $datec='';
+	public $fk_user_creat;
+	public $options;
 
-
+	public $lines=array();
 
 
     /**
@@ -294,6 +294,80 @@ class Companycontacts extends CommonObject
 		}
     }
 
+    /**
+     * Load object in memory from the database
+     *
+     * @return int <0 if KO, >0 if OK
+     */
+    function fetchAll($sortorder='', $sortfield='', $limit=0, $offset=0, $filter = array()) {
+
+    	$sql = "SELECT";
+    	$sql.= " t.rowid,";
+
+    	$sql.= " t.tms,";
+    	$sql.= " t.fk_soc_source,";
+    	$sql.= " t.fk_soc,";
+    	$sql.= " t.fk_contact,";
+    	$sql.= " t.function_code,";
+    	$sql.= " t.department_code,";
+    	$sql.= " t.datec,";
+    	$sql.= " t.fk_user_creat,";
+    	$sql.= " t.options";
+    	$sql.= " FROM ".MAIN_DB_PREFIX."company_contacts as t";
+    	$sql.= " WHERE 1";
+    	if (count($filter) > 0) {
+    		foreach ( $filter as $key => $value ) {
+    			if ($key == 't.fk_soc_source' || $key == 't.fk_soc' || $key == 't.fk_contact') {
+    				$sql .= ' AND ' . $key . '=' . $value;
+    			} else {
+    				$sql .= ' AND ' . $key . ' LIKE \'%' . $this->db->escape($value) . '%\'';
+    			}
+    		}
+    	}
+    	if (! empty($sortfield)) {
+    		$sql .= $this->db->order($sortfield, $sortorder);
+    	}
+
+    	if (! empty($limit)) {
+    		$sql .= ' ' . $this->db->plimit($limit + 1, $offset);
+    	}
+
+    	dol_syslog(get_class($this) . "::".__METHOD__ . " sql=" . $sql, LOG_DEBUG);
+    	$resql = $this->db->query($sql);
+    	if ($resql) {
+    		if ($this->db->num_rows($resql)) {
+
+    			$this->lines=array();
+
+    			while($obj = $this->db->fetch_object($resql)) {
+
+    				$line=new self($this->db);
+
+    				$line->id = $obj->rowid;
+
+    				$line->tms = $this->db->jdate($obj->tms);
+    				$line->fk_soc_source = $obj->fk_soc_source;
+    				$line->fk_soc = $obj->fk_soc;
+    				$line->fk_contact = $obj->fk_contact;
+    				$line->function_code = $obj->function_code;
+    				$line->department_code = $obj->department_code;
+    				$line->datec = $this->db->jdate($obj->datec);
+    				$line->fk_user_creat = $obj->fk_user_creat;
+    				$line->options = $obj->options;
+
+    				$this->lines[$line->id]=$line;
+    			}
+    		}
+    		$this->db->free($resql);
+
+    		return 1;
+    	} else {
+    		$this->error = "Error " . $this->db->lasterror();
+    		dol_syslog(get_class($this) . "::".__METHOD__." ". $this->error, LOG_ERR);
+    		return - 1;
+    	}
+    }
+
 
  	/**
 	 *  Delete object in database
@@ -432,4 +506,3 @@ class Companycontacts extends CommonObject
 	}
 
 }
-?>
