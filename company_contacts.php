@@ -146,7 +146,7 @@ if ($socid > 0)
 				null; // actions in normal case
       		}
 
-			print '<a href="'.DOL_URL_ROOT.'/user/fiche.php?id='.$obj->rowid.'">';
+			print '<a href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->rowid.'">';
 			print img_object($langs->trans("ShowUser"),"user").' ';
 			print dolGetFirstLastname($obj->firstname, $obj->lastname)."\n";
 			print '</a>&nbsp;';
@@ -306,7 +306,7 @@ if ($socid > 0)
 				$var=!$var;
 
 				print "<tr ".$bc[$var]."><td>";
-				print '<a href="'.DOL_URL_ROOT.'/contact/fiche.php?id='.$obj->contact_id.'">';
+				print '<a href="'.DOL_URL_ROOT.'/contact/card.php?id='.$obj->contact_id.'">';
 				print img_object($langs->trans("ShowContact"),"contact").' ';
 				print dolGetFirstLastname($obj->firstname, $obj->lastname)."\n";
 				print '</a></td>';
