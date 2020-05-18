@@ -61,7 +61,7 @@ class modCompanycontacts extends DolibarrModules
         // (where XXX is value of numeric property 'numero' of module)
         $this->description = "Add a link between one contact and several companies";
         // Possible values for version are: 'development', 'experimental' or version
-        $this->version = '0.2';
+        $this->version = '1.0.0';
         // Key used in llx_const table to save module status enabled/disabled
         // (where MYMODULE is value of property name of module in uppercase)
         $this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
