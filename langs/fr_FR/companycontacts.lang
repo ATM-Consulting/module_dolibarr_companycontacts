@@ -40,6 +40,7 @@ MyModuleAbout = À propos de mon module
 MyModuleAboutPage = Page à propos de mon module
 
 ContactsLinked=Contacts liés
+ContactLinked=Contact lié
 LinkAContact=Lier un contact
 ListOfContactsLinked=Liste des contacts liés
 ContactLinkedWithCompanySuccessfully=Contact lié avec succès

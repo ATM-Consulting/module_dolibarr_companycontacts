@@ -157,4 +157,148 @@ class ActionsCompanycontacts // extends CommonObject
 		}
 	}
 
+	function getFormMail($parameters, &$object, &$action, $hookmanager)
+	{
+		global $langs, $conf;
+		$langs->load('companycontacts@companycontacts');
+
+		$TContext = explode(':', $parameters['context']);
+
+		if (!empty($conf->agefodd->enabled) && in_array('formmail', $TContext) && (in_array('agefodd_send_docs', $TContext) || in_array('agefoddsessiondocumenttrainee', $TContext)))
+		{
+
+			$socid = GETPOST('socid', 'int');
+			$Sessid = GETPOST('id', 'int');
+			$sessiontraineeid = GETPOST('sessiontraineeid', 'int');
+
+			if ($socid)
+			{
+				$object = $this->_addReceiversToForm($object, $socid, in_array('agefodd_document_trainee', $TContext));
+			}
+
+			if ($Sessid)
+			{
+				dol_include_once('/agefodd/class/agsession.class.php');
+				$session = new Agsession($this->db);
+				$session->fetch($Sessid);
+
+				if (!empty($session->fk_soc))
+				{
+					$object = $this->_addReceiversToForm($object, $session->fk_soc, in_array('agefodd_document_trainee', $TContext));
+				}
+			}
+
+			if (!empty($sessiontraineeid))
+			{
+
+				dol_include_once('/agefodd/class/agefodd_session_stagiaire.class.php');
+				$sessta = new Agefodd_session_stagiaire($this->db);
+				$sessta->fetch($sessiontraineeid);
+
+				dol_include_once('/agefodd/class/agefodd_stagiaire.class.php');
+				$sta = new Agefodd_stagiaire($this->db);
+				$sta->fetch($sessta->fk_stagiaire);
+
+				if (!empty($sta->thirdparty->id))
+				{
+					$object = $this->_addReceiversToForm($object, $sta->thirdparty->id, in_array('agefodd_document_trainee', $TContext));
+				}
+
+			}
+		}
+	}
+
+	function formObjectOptions($parameters, &$object, &$action, $hookmanager)
+	{
+		global $conf, $langs;
+		$langs->load('companycontacts@companycontacts');
+
+		$TContext = explode(':', $parameters['context']);
+
+		if (!empty($conf->agefodd->enabled) && in_array('agefoddsessionsubscribers', $TContext))
+		{
+			$stag_id = GETPOST('modstagid', 'int');
+			$sessid = GETPOST('id', 'int');
+
+			if ($action == 'edit' && !empty($stag_id))
+			{
+				$options = '';
+
+				dol_include_once('/agefodd/class/agefodd_stagiaire.class.php');
+				$sta = new Agefodd_stagiaire($this->db);
+				$sta->fetch($stag_id);
+
+				dol_include_once('/agefodd/class/agefodd_session_stagiaire.class.php');
+				$sessta = new Agefodd_session_stagiaire($this->db);
+				$sessta->fetch_by_trainee($sessid, $stag_id);
+
+				// récupérons les contacts liés à la société du participant
+				if (!empty($sta->thirdparty->id))
+				{
+					dol_include_once('/companycontacts/class/companycontacts.class.php');
+					require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+
+					$cc = new Companycontacts($this->db);
+
+					$cc->fetchAll('','',0,0,array("t.fk_soc_source" => $sta->thirdparty->id));
+					if (!empty($cc->lines))
+					{
+						foreach ($cc->lines as $line)
+						{
+							$contactStatic = new Contact($this->db);
+							$res = $contactStatic->fetch($line->fk_contact);
+
+							if ($res > 0)
+							{
+								$options .= '<option value="'.$contactStatic->id.'"';
+								$options .= ($sessta->fk_socpeople_sign == $contactStatic->id ? ' selected' : '');
+								$options .= '>'.$contactStatic->getFullName($langs).' - ('.$contactStatic->socname.' - '.$langs->transnoentities('ContactLinked').')</option>';
+							}
+						}
+					}
+				}
+
+				if (!empty($options))
+				{
+				?>
+				<script>
+					$(document).ready(function(){
+						$('select#fk_socpeople_sign').append($('<?php echo $options; ?>'))
+					});
+				</script>
+				<?php
+				}
+			}
+		}
+	}
+
+	private function _addReceiversToForm(&$object, $socid, $traineeDoc = false)
+	{
+		global $langs;
+
+		dol_include_once('/companycontacts/class/companycontacts.class.php');
+		require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+
+		$cc = new Companycontacts($this->db);
+
+		$cc->fetchAll('','',0,0,array("t.fk_soc_source" => $socid));
+		if (!empty($cc->lines))
+		{
+			foreach ($cc->lines as $line)
+			{
+				$contactStatic = new Contact($this->db);
+				$res = $contactStatic->fetch($line->fk_contact);
+
+				if ($res > 0 && is_array($object->withto) && !array_key_exists($contactStatic->id, $object->withto))
+				{
+					$key = $contactStatic->id;
+					if ($traineeDoc) $key.= '_socp';
+					$object->withto[$key] = $contactStatic->lastname . ' ' . $contactStatic->firstname . ' - ' . $contactStatic->email . ' (' . $langs->transnoentities('ContactLinked') . ')';
+				}
+			}
+		}
+
+		return $object;
+	}
+
 }
